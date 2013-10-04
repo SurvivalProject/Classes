@@ -2,7 +2,6 @@ local Socket = {}
 
 local SocketRoot = game.Players.LocalPlayer:FindFirstChild("Sockets") or Instance.new("Model", game.Players.LocalPlayer)
 SocketRoot.Name = "Sockets"
-local Sockets = 0
 
 function Socket:Put(msg)
 	local destination = self.Receiver.Parent and self.Receiver:FindFirstChild("Sockets") 
@@ -12,12 +11,17 @@ function Socket:Put(msg)
 	end
 	local destination =	self.Receiver.Sockets:FindFirstChild(game.Players.LocalPlayer.Name)
 	if not destination then
-		local mod = Instance.new("Model", self.Receiver.Sockets)
+		local mod = Instance.new("Model")
 		mod.Name = game.Players.LocalPlayer.Name
+		mod.Parent = self.Receiver.Sockets
+		self.SocketRoot = mod
 	end
+	local destination =destination or self.Receiver.Sockets:FindFirstChild(game.Players.LocalPlayer.Name)
+	self.SocketRoot = destination
 	local str = Instance.new("StringValue")
 	str.Value = msg
 	str.Parent = destination
+	print("Destination:: "..str.Parent.Parent.Parent.Name)
 	return true	
 end
 
@@ -28,15 +32,10 @@ end
 
 Socket.Receiver = SE_nil
 
-function Socket:Constructor() 
-	Sockets = Sockets+1
-	local new_socket_bin = Instance.new("Model", SocketRoot)
-	new_socket_bin.Name = "Socket"..Sockets
-	self.SocketRoot = new_socket_bin
-end
-
 function Socket:Wait()
+	print(self.SocketRoot:GetFullName())
 	local added = self.SocketRoot.ChildAdded:wait()
+	print(added)
 	return added
 end
 
@@ -48,26 +47,33 @@ function Socket:WaitFor(msg)
 end
 
 function Socket:InitiateChat()
-	local write_stream = System.StreamService:TemporaryStream(">"..self.Receiver)
+	local write_stream = System.StreamService[">"..self.Receiver.Name] or Create("Stream", System.StreamService)
+	write_stream.Name = ">"..self.Receiver.Name
+	write_stream:write("socket service started at "..math.floor(tick()+0.5).."!")
 	while true do
-		local msg = self:Wait()
+		local msg = self:Wait().Value
 		if msg == "close" then
 			self:Put("bye")
 			write_stream:write("_r "..self.Receiver.Name.." closed connection")
 			return
 		end
-		write_stream:write(msg)
+		if type(msg) == "string" then
+			write_stream:write(msg)
+		end
 	end
 end
 		
 
-function Socket:SetReceiver(r)
+function Socket:SetReceiver(r, direction) -- Direction false = out; true = in
 	self.Receiver = r
-	self.SocketRoot.Name = r.Name
-	self:Put("hello "..r.Name .. " from ".. game.Players.LocalPlayer.Name)
-	delay(0, function()
-	local msg = self:Wait()
-	self:InitiateChat() 
-	end)
+	if not direction then 
+		self:Put("hello "..r.Name .. " from ".. game.Players.LocalPlayer.Name)
+		System.MessageCentral:Register(self, r.Name)
+	else
+		delay(0, function()
+			self:InitiateChat() 
+		end)
+	end
 end
 
+CreateClass("Socket", Socket)
