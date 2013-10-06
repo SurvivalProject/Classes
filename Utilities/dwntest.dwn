@@ -1,0 +1,17 @@
+use se_frontend;
+use se_backend;
+use se_bitmap;
+use dawnstream;
+
+my_bitmap = new default se_bitmap;
+
+my_app = new app;
+
+my_app(on_launch):
+local my_canvas = lua "return System.Utilities:CreateDawnObject((Create("GuiCanvas"))";
+push my_bitmap in my_canvas(draw){
+on_error: throw "could not draw";
+on_success: object state = 1;
+}
+report "draw complete";
+end
