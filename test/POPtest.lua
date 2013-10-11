@@ -24,7 +24,7 @@ System:regmode(getfenv(), apikey, privkey, encrman(pubkey), nil)
 local disk = System.Utilities._ABSTRACT_HIDDEN.DirTools:MakeVirtualDrive("ROOT")
 disk[0] = "*se try FF -f -b -after \"call mem_hook MOVEDIR default default2\""
 disk[ 0xFF ] = System.Utilties._ABSTRACT_HIDDEN.DirTools:MakeEXFUNC(function(...) -- redirect 
-	getfenv()[select(1)][select(2)](getfenv()[select[1]], select(3), select(4))
+	getfenv()[select(1)][select(2)](getfenv()[select(1)], select(3), select(4))
 end)
 disk:get("default2")
 disk:prsatus("default2")
